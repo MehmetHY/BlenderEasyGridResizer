@@ -13,10 +13,14 @@ bl_info = {
     "category": "3D View"
 }
 
+
 class GridProperties(bpy.types.PropertyGroup):
     set_grid_size: bpy.props.FloatProperty(name="Set Grid Size", default=1.0, min=0.0)
-    add_subtruct_step: bpy.props.FloatProperty(name = "Add/Subtruct Step", default = 1.0, min = 0.0)
-    multiply_divide_step: bpy.props.FloatProperty(name = "Multiply/Divide Step", default = 2.0, min = 1.0)
+    add_subtruct_step: bpy.props.FloatProperty(name="Add/Subtruct Step", default=1.0, min=0.0)
+    multiply_divide_step: bpy.props.FloatProperty(name="Multiply/Divide Step", default=2.0, min=1.0)
+    overlay_active: bpy.props.BoolProperty("Grid Size Overlay", default=True)
+    overlay_font_size: bpy.props.IntProperty("Overlay Size", default=24)
+
 
 class SetGridScale(bpy.types.Operator):
     bl_idname = "view3d.set_grid_size"
@@ -24,8 +28,9 @@ class SetGridScale(bpy.types.Operator):
     bl_options = {'REGISTER'}
 
     def execute(self, context):
-        bpy.context.space_data.overlay.grid_scale = bpy.data.objects[0].grid_property_group.set_grid_size
+        bpy.context.space_data.overlay.grid_scale = bpy.context.scene.grid_property_group.set_grid_size
         return {'FINISHED'}
+
 
 class IncreaseGridScale(bpy.types.Operator):
     bl_idname = "view3d.increase_grid_size"
@@ -33,8 +38,9 @@ class IncreaseGridScale(bpy.types.Operator):
     bl_options = {'REGISTER'}
 
     def execute(self, context):
-        bpy.context.space_data.overlay.grid_scale += bpy.data.objects[0].grid_property_group.add_subtruct_step
+        bpy.context.space_data.overlay.grid_scale += bpy.context.scene.grid_property_group.add_subtruct_step
         return {'FINISHED'}
+
 
 class DecreaseGridScale(bpy.types.Operator):
     bl_idname = "view3d.decrease_grid_size"
@@ -42,8 +48,9 @@ class DecreaseGridScale(bpy.types.Operator):
     bl_options = {'REGISTER'}
 
     def execute(self, context):
-        bpy.context.space_data.overlay.grid_scale -= bpy.data.objects[0].grid_property_group.add_subtruct_step
+        bpy.context.space_data.overlay.grid_scale -= bpy.context.scene.grid_property_group.add_subtruct_step
         return {'FINISHED'}
+
 
 class MultiplyGridScale(bpy.types.Operator):
     bl_idname = "view3d.multiply_grid_size"
@@ -51,8 +58,9 @@ class MultiplyGridScale(bpy.types.Operator):
     bl_options = {'REGISTER'}
 
     def execute(self, context):
-        bpy.context.space_data.overlay.grid_scale *= bpy.data.objects[0].grid_property_group.multiply_divide_step
+        bpy.context.space_data.overlay.grid_scale *= bpy.context.scene.grid_property_group.multiply_divide_step
         return {'FINISHED'}
+
 
 class DivideGridScale(bpy.types.Operator):
     bl_idname = "view3d.divide_grid_size"
@@ -60,8 +68,9 @@ class DivideGridScale(bpy.types.Operator):
     bl_options = {'REGISTER'}
 
     def execute(self, context):
-        bpy.context.space_data.overlay.grid_scale /= bpy.data.objects[0].grid_property_group.multiply_divide_step
+        bpy.context.space_data.overlay.grid_scale /= bpy.context.scene.grid_property_group.multiply_divide_step
         return {'FINISHED'}
+
 
 class GridPanel(bpy.types.Panel):
     bl_idname = "EASYGRIDSIZER_PT_grid_size"
@@ -73,20 +82,20 @@ class GridPanel(bpy.types.Panel):
     @classmethod
     def poll(cls, context):
         return (context.object is not None)
-    
+
     def draw(self, context):
         layout = self.layout
         box = layout.box()
-        box.label(text = "Current Grid Size")
+        box.label(text="Current Grid Size")
         row = box.row()
         box = row.box()
-        current_grid_label = box.label(text = str(bpy.context.space_data.overlay.grid_scale))
+        current_grid_label = box.label(text=str(bpy.context.space_data.overlay.grid_scale))
 
         layout.row()
         box = layout.box()
-        box.label(text = "Set Grid Size")
+        box.label(text="Set Grid Size")
         box.row()
-        prop_group = bpy.data.objects[0].grid_property_group
+        prop_group = bpy.context.scene.grid_property_group
         box.prop(prop_group, "set_grid_size")
         box.operator("view3d.set_grid_size")
         row = box.row()
@@ -108,26 +117,20 @@ class GridPanel(bpy.types.Panel):
         row = box.row()
         row.operator("view3d.divide_grid_size")
         row.operator("view3d.multiply_grid_size")
-    
+
+
+classes_to_register = (GridProperties, SetGridScale, IncreaseGridScale, DecreaseGridScale, MultiplyGridScale, DivideGridScale, GridPanel)
+
 def register():
-    bpy.utils.register_class(GridProperties)
-    bpy.types.Object.grid_property_group = bpy.props.PointerProperty(type = GridProperties)
-    bpy.utils.register_class(SetGridScale)
-    bpy.utils.register_class(IncreaseGridScale)
-    bpy.utils.register_class(DecreaseGridScale)
-    bpy.utils.register_class(MultiplyGridScale)
-    bpy.utils.register_class(DivideGridScale)
-    bpy.utils.register_class(GridPanel)
+    for cls in classes_to_register:
+        bpy.utils.register_class(cls)
+    bpy.types.Scene.grid_property_group = bpy.props.PointerProperty(type=GridProperties)
 
 def unregister():
-    bpy.utils.unregister_class()(GridProperties)
-    del bpy.types.Object.grid_property_group
-    bpy.utils.unregister_class()(SetGridScale)
-    bpy.utils.unregister_class()(IncreaseGridScale)
-    bpy.utils.unregister_class()(DecreaseGridScale)
-    bpy.utils.unregister_class()(MultiplyGridScale)
-    bpy.utils.unregister_class()(DivideGridScale)
-    bpy.utils.unregister_class(GridPanel)
+    for cls in classes_to_register:
+        bpy.utils.unregister_class(cls)
+    del bpy.types.Scene.grid_property_group
+
 
 if __name__ == "__main__":
     register()

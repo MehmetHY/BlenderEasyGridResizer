@@ -45,7 +45,7 @@ class DrawGridSizeOverlay(bpy.types.Operator):
         if bpy.context.area .type == "VIEW_3D":
             if bpy.context.scene.grid_property_group.overlay_active:
                 font_info["handler"] = bpy.types.SpaceView3D.draw_handler_add(draw_callback, (self, context), 'WINDOW', 'POST_PIXEL')
-            else:
+            elif font_info["handler"] != None:
                 bpy.types.SpaceView3D.draw_handler_remove(font_info["handler"], 'WINDOW')
         return {'FINISHED'}
 

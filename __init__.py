@@ -128,7 +128,7 @@ class GridPanel(bpy.types.Panel):
 
     @classmethod
     def poll(cls, context):
-        return (context.object is not None)
+        return (context.scene is not None)
 
     def draw(self, context):
         prop_group = bpy.context.scene.grid_property_group

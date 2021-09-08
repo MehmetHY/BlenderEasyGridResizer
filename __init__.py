@@ -16,7 +16,7 @@ bl_info = {
 }
 
 
-font_info = {"handler": None}
+font_info = {"handler": None, "active": False}
 
 
 class GridProperties(bpy.types.PropertyGroup):
@@ -24,8 +24,6 @@ class GridProperties(bpy.types.PropertyGroup):
     add_subtruct_step: bpy.props.FloatProperty(name="Add/Subtruct Step", default=1.0, min=0.0, description="Add/Subtract Value")
     multiply_divide_step: bpy.props.FloatProperty(
         name="Multiply/Divide Step", default=2.0, min=1.0, description="Multply/Divide Value")
-    overlay_active: bpy.props.BoolProperty(
-        "Grid Size Overlay", default=False, description="Draw Overlay")
     overlay_font_size: bpy.props.IntProperty(
         "Overlay Size", default=24, description="Overlay Size", min=18, max=64)
     overlay_color: bpy.props.FloatVectorProperty("Overlay Color", subtype="COLOR", size=4, default=(
@@ -41,13 +39,15 @@ class DrawGridSizeOverlay(bpy.types.Operator):
     bl_options = {'REGISTER'}
 
     def execute(self, context):
-        bpy.context.scene.grid_property_group.overlay_active = not bpy.context.scene.grid_property_group.overlay_active
+        font_info["active"] = not font_info["active"]
         if bpy.context.area .type == "VIEW_3D":
-            if bpy.context.scene.grid_property_group.overlay_active:
+            if font_info["active"]:
                 font_info["handler"] = bpy.types.SpaceView3D.draw_handler_add(draw_callback, (self, context), 'WINDOW', 'POST_PIXEL')
             elif font_info["handler"] != None:
                 bpy.types.SpaceView3D.draw_handler_remove(font_info["handler"], 'WINDOW')
+        bpy.context.region.tag_redraw()
         return {'FINISHED'}
+
 
 
 def draw_callback(self, context):

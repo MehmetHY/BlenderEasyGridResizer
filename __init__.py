@@ -120,59 +120,101 @@ class DivideGridScale(bpy.types.Operator):
 
 
 class GridPanel(bpy.types.Panel):
-    bl_idname = "EASYGRIDSIZER_PT_grid_size"
+    bl_idname = "EASYGRIDSIZER_PT_grid_panel"
     bl_label = "Easy Grid Resizer"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
     bl_category = "View"
+    bl_options = {'DEFAULT_CLOSED'}
 
-    @classmethod
-    def poll(cls, context):
-        return (context.scene is not None)
+    def draw(self, context):
+        prop_group = bpy.context.scene.grid_property_group
+        layout = self.layout
+
+
+class GridOverlayPanel(bpy.types.Panel):
+    bl_idname = "EASYGRIDSIZER_PT_grid_overlay"
+    bl_label = "Grid Overlay Text"
+    bl_parent_id = 'EASYGRIDSIZER_PT_grid_panel'
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
 
     def draw(self, context):
         prop_group = bpy.context.scene.grid_property_group
         layout = self.layout
 
         box = layout.box()
-        box.label(text="Current Grid Size")
-        row = box.row()
-        box = row.box()
-        box.label(text=str(bpy.context.space_data.overlay.grid_scale))
-        box.operator("view3d.draw_grid_size_overlay", text="Show Text")
+        box.operator("view3d.draw_grid_size_overlay", text="Show/Hide Text")
         box.prop(prop_group, "overlay_font_size", text="Text Size")
         box.prop(prop_group, "overlay_direction", text="Text Location")
         box.prop(prop_group, "overlay_color", text="Text Color")
 
-        layout.row()
+class GridSizePanel(bpy.types.Panel):
+    bl_idname = "EASYGRIDSIZER_PT_grid_size"
+    bl_label = "Grid Size"
+    bl_parent_id = 'EASYGRIDSIZER_PT_grid_panel'
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+
+    def draw(self, context):
+        prop_group = bpy.context.scene.grid_property_group
+        layout = self.layout
+
         box = layout.box()
         box.label(text="Set Grid Size")
-        box.row()
         box.prop(prop_group, "set_grid_size")
         box.operator("view3d.set_grid_size")
         row = box.row()
 
-        layout.row()
+        layout.separator()
         box = layout.box()
         box.label(text="Add/Subtruct Grid Size")
-        box.row()
         box.prop(prop_group, "add_subtruct_step")
         row = box.row()
         row.operator("view3d.decrease_grid_size", text="Subtract")
         row.operator("view3d.increase_grid_size", text="Add")
 
-        layout.row()
+        layout.separator()
         box = layout.box()
         box.label(text="Multiply/Divide Grid Size")
-        box.row()
         box.prop(prop_group, "multiply_divide_step")
         row = box.row()
         row.operator("view3d.divide_grid_size", text="Divide")
         row.operator("view3d.multiply_grid_size", text="Multiply")
 
+class GridSnapPanel(bpy.types.Panel):
+    bl_idname = "EASYGRIDSIZER_PT_grid_snap"
+    bl_label = "Snap to Grid"
+    bl_parent_id = 'EASYGRIDSIZER_PT_grid_panel'
+    bl_space_type = "VIEW_3D"
+    bl_region_type = "UI"
+
+    def draw(self, context):
+        prop_group = bpy.context.scene.grid_property_group
+        layout = self.layout
+
+        box = layout.box()
+        box.operator('view3d.snap_all_vertices_to_grid', text='Snap All Vertices')
+        box.operator('view3d.snap_selected_to_grid', text='Snap Selected')
+
+
+class SnapAllVerticesToGrid(bpy.types.Operator):
+    bl_idname = 'view3d.snap_all_vertices_to_grid'
+    bl_label = 'Snap All Vertices To Grid'
+    bl_description = 'Snap all vertices of the selected objects to grid'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        pre_mode = bpy.context.object.mode
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.select_all(action='SELECT')
+        bpy.ops.view3d.snap_selected_to_grid()
+        bpy.ops.mesh.select_all(action='DESELECT')
+        bpy.ops.object.mode_set(mode=pre_mode)
+        return {'FINISHED'}
 
 classes_to_register = (GridProperties, SetGridScale, IncreaseGridScale, DecreaseGridScale,
-                       MultiplyGridScale, DivideGridScale, GridPanel, DrawGridSizeOverlay)
+                       MultiplyGridScale, DivideGridScale, GridPanel, DrawGridSizeOverlay, SnapAllVerticesToGrid, GridOverlayPanel, GridSizePanel, GridSnapPanel)
 
 def register():
     for cls in classes_to_register:

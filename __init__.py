@@ -205,6 +205,8 @@ class SnapAllVerticesToGrid(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     def execute(self, context):
+        if bpy.context.active_object == None:
+            return {'FINISHED'}
         pre_mode = bpy.context.object.mode
         bpy.ops.object.mode_set(mode='EDIT')
         bpy.ops.mesh.select_all(action='SELECT')
